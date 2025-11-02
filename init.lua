@@ -172,7 +172,7 @@ vim.o.confirm = true
 -- [[ Basic Keymaps ]]
 -- plover related keymaps
 vim.keymap.set('i', '<C-j>', '<C-\\><C-o>', { noremap = true, silent = true })
-vim.keymap.set('n', '<C-j>', '<nop>', { noremap = true, silent = true })
+vim.keymap.set({ 'n', 'v' }, '<C-j>', '<nop>', { noremap = true, silent = true })
 vim.keymap.set('t', '<C-j>', '<C-\\><C-n>', { noremap = true, silent = true })
 
 -- Clear highlights on search when pressing <Esc> in normal mode
@@ -301,28 +301,27 @@ require('lazy').setup({
     'Josiah-tan/plover-vim-tutor',
   },
   {
-    -- 'olimorris/codecompanion.nvim',
-    dir = '~/exp/codecompanion.nvim',
+    'olimorris/codecompanion.nvim',
+    -- dir = '~/exp/codecompanion.nvim',
     dependencies = {
       'nvim-lua/plenary.nvim',
       'ravitemer/mcphub.nvim',
     },
-    adapters = {
-      acp = {
-        gemini_cli = function()
-          return require('codecompanion.adapters').extend('gemini_cli', {
-            defaults = {
-              auth_method = 'gemini-api-key', -- "oauth-personal"|"gemini-api-key"|"vertex-ai"
-            },
-            env = {
-              api_key = 'cmd:op read op://Personal/Gemini/credential --no-newline',
-              GEMINI_API_KEY = 'cmd:op read op://Personal/Gemini/credential --no-newline',
-            },
-          })
-        end,
-      },
-    },
     opts = {
+      adapters = {
+        acp = {
+          gemini_cli = function()
+            return require('codecompanion.adapters').extend('gemini_cli', {
+              defaults = {
+                auth_method = 'gemini-api-key', -- "oauth-personal"|"gemini-api-key"|"vertex-ai"
+              },
+              env = {
+                GEMINI_API_KEY = 'cmd:op read op://Personal/Gemini/credential --no-newline',
+              },
+            })
+          end,
+        },
+      },
       strategies = {
         chat = {
           adapter = 'gemini_cli',
@@ -378,7 +377,7 @@ require('lazy').setup({
       {
         '<leader>gs',
         function()
-          require('neogit').open { kind = 'replace' }
+          require('neogit').open { cwd = vim.fn.expand '%:p:h', kind = 'split_above' }
         end,
         desc = 'Open Neogit',
       },
@@ -649,7 +648,7 @@ require('lazy').setup({
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
       vim.keymap.set('n', '<leader>lb', function()
         builtin.grep_string {
-          search = vim.fn.input 'open file grep >',
+          search = vim.fn.input 'open file grep > ',
           grep_open_files = true,
           prompt_title = 'Live Grep in Open Files',
         }
@@ -954,6 +953,7 @@ require('lazy').setup({
       --
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
+
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
@@ -974,6 +974,18 @@ require('lazy').setup({
           end,
         },
       }
+      -- configure Swift serve here since it is not installed via Mason
+      vim.lsp.config('sourcekit', {
+        -- capabilities = capabilities,
+        capabilities = {
+          workspace = {
+            didChangeWatchedFiles = {
+              dynamicRegistration = true,
+            },
+          },
+        },
+      })
+      vim.lsp.enable 'sourcekit'
     end,
   },
 
@@ -997,7 +1009,7 @@ require('lazy').setup({
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
+        local disable_filetypes = { c = true, cpp = true, mm = true, m = true }
         if disable_filetypes[vim.bo[bufnr].filetype] then
           return nil
         else
