@@ -84,8 +84,8 @@ I hope you enjoy your Neovim journey,
 P.S. You can delete this when you're done too. It's your config now! :)
 --]]
 
-vim.g.shiftwidth = 2
-vim.g.tabstop = 2
+-- vim.g.shiftwidth = 2
+-- vim.g.tabstop = 2
 
 -- Set <space> as the leader key
 -- See `:help mapleader`
@@ -180,7 +180,7 @@ vim.keymap.set('t', '<C-j>', '<C-\\><C-n>', { noremap = true, silent = true })
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+vim.keymap.set('n', '<leader>qf', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -200,14 +200,19 @@ vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' }
 --  Use CTRL+<hjkl> to switch between windows
 --
 --  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+-- vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
+-- vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
+-- vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
+-- vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 vim.keymap.set('n', '<leader>wh', '<C-w><C-h>', { desc = 'Move focus to the left window' })
 vim.keymap.set('n', '<leader>wl', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<leader>wj', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<leader>wk', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+
+vim.keymap.set('i', '<C-j><C-w><left>', '<Esc><C-w><C-h>', { desc = 'Move focus to the left window' })
+vim.keymap.set('i', '<C-j><C-w><right>', '<Esc><C-w><C-l>', { desc = 'Move focus to the right window' })
+vim.keymap.set('i', '<C-j><C-w><down>', '<Esc><C-w><C-j>', { desc = 'Move focus to the lower window' })
+vim.keymap.set('i', '<C-j><C-w><up>', '<Esc><C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 vim.keymap.set('n', '<leader>vp', '<C-w>v<C-^>', { desc = '[V]ertical split with [P]revious window' })
 vim.keymap.set('n', '<leader>sp', '<C-w>s<C-^>', { desc = '[S]unset split with [P]revious window' })
@@ -224,6 +229,7 @@ vim.keymap.set('n', '<leader>cp', '<cmd>cprev<CR>', { noremap = true, silent = t
 vim.keymap.set('n', '<leader>cn', '<cmd>cnext<CR>', { noremap = true, silent = true })
 -- quick fix list
 vim.keymap.set('n', '<leader>co', '<cmd>copen<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>cd', '<cmd>cdo :s/', { noremap = true, silent = true, desc = '[CD]o' })
 
 vim.keymap.set({ 'n', 'v' }, '<leader>tc', function()
   local folder = '~/org/cap/'
@@ -286,6 +292,69 @@ rtp:prepend(lazypath)
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
+  {
+    'kana/vim-textobj-entire',
+    lazy = false,
+    dependencies = { 'kana/vim-textobj-user' },
+  },
+  {
+    'Josiah-tan/plover-vim-tutor',
+  },
+  {
+    -- 'olimorris/codecompanion.nvim',
+    dir = '~/exp/codecompanion.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'ravitemer/mcphub.nvim',
+    },
+    adapters = {
+      acp = {
+        gemini_cli = function()
+          return require('codecompanion.adapters').extend('gemini_cli', {
+            defaults = {
+              auth_method = 'gemini-api-key', -- "oauth-personal"|"gemini-api-key"|"vertex-ai"
+            },
+            env = {
+              api_key = 'cmd:op read op://Personal/Gemini/credential --no-newline',
+              GEMINI_API_KEY = 'cmd:op read op://Personal/Gemini/credential --no-newline',
+            },
+          })
+        end,
+      },
+    },
+    opts = {
+      strategies = {
+        chat = {
+          adapter = 'gemini_cli',
+          -- model = 'gemini-2.5-flash',
+          model = 'gemini-2.5-pro',
+          keymaps = {
+            options = {
+              modes = { n = 'g?' },
+              callback = 'keymaps.options',
+              description = 'Options',
+              hide = true,
+            },
+            send = {
+              modes = {},
+            },
+          },
+        },
+      },
+      -- NOTE: The log_level is in `opts.opts`
+      opts = {
+        log_level = 'DEBUG',
+      },
+    },
+    keys = {
+      {
+        '<leader>ch',
+        '<cmd>CodeCompanionChat Toggle<CR>',
+        desc = 'Toggle a chat buffer',
+        mode = { 'n', 'v' },
+      },
+    },
+  },
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'NMAC427/guess-indent.nvim', -- Detect tabstop and shiftwidth automatically
 
@@ -349,11 +418,11 @@ require('lazy').setup({
               gitsigns.nav_hunk 'prev'
             end
           end)
-          map('n', '<leader>ghp', gitsigns.preview_hunk)
-          map('n', '<leader>ght', gitsigns.toggle_current_line_blame)
+          map('n', '<leader>ghp', gitsigns.preview_hunk, { desc = '[G]it [H]unk [P]review' })
+          map('n', '<leader>ght', gitsigns.toggle_current_line_blame, { desc = '[G]it [H]unk [T]oggle' })
           map('n', '<leader>ghb', function()
             gitsigns.blame_line { full = true }
-          end)
+          end, { desc = '[G]it [H]unk [B]lame' })
         end,
       }
     end,
@@ -500,6 +569,7 @@ require('lazy').setup({
         --  All the info you're looking for is in `:help telescope.setup()`
         --
         defaults = {
+          file_sorter = require('telescope.sorters').get_fzy_sorter,
           layout_config = {
             width = 0.99,
             height = 0.99,
@@ -537,12 +607,20 @@ require('lazy').setup({
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
           },
+          fzf = {
+            fuzzy = true, -- false will only do exact matching
+            override_generic_sorter = true, -- override the generic sorter
+            override_file_sorter = true, -- override the file sorter
+            case_mode = 'smart_case', -- or "ignore_case" or "respect_case"
+            -- the default case_mode is "smart_case"
+          },
         },
       }
 
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
+      -- pcall(require('telescope').load_extension, 'fzy_native')
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
@@ -550,7 +628,11 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>ff', builtin.find_files, { desc = '[F]ind [F]iles' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set({ 'n', 'v' }, '<leader>sg', builtin.grep_string, { desc = '[G]rep [S]tring' })
-      vim.keymap.set('n', '<leader>lg', builtin.live_grep, { desc = '[L]ive [G]rep' })
+      vim.keymap.set('n', '<leader>lg', function()
+        builtin.grep_string {
+          search = vim.fn.input 'Grep For > ',
+        }
+      end, { desc = '[L]ive [G]rep' })
       vim.keymap.set('n', '<leader>wd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>dd', function()
         builtin.diagnostics { bufnr = 0 }
@@ -566,16 +648,19 @@ require('lazy').setup({
       -- It's also possible to pass additional configuration options.
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
       vim.keymap.set('n', '<leader>lb', function()
-        builtin.live_grep {
+        builtin.grep_string {
+          search = vim.fn.input 'open file grep >',
           grep_open_files = true,
           prompt_title = 'Live Grep in Open Files',
         }
       end, { desc = '[L]ive Grep [B]uffers' })
 
       vim.keymap.set('n', '<leader>lh', function()
-        builtin.live_grep {
+        builtin.grep_string {
+          search = vim.fn.input 'history grep > ',
           cwd = vim.fn.expand '~',
-          glob_pattern = '.zsh_history',
+          search_dirs = { vim.fn.expand '~/.zsh_history' },
+          prompt_title = 'live grep history',
         }
       end, { desc = '[L]ive Grep [H]istory' })
 
@@ -584,8 +669,9 @@ require('lazy').setup({
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = 'vim[RC]' })
 
-      vim.keymap.set('n', '<leader>lrc', function()
-        builtin.live_grep {
+      vim.keymap.set('n', '<leader>lc', function()
+        builtin.grep_string {
+          search = vim.fn.input 'vimrc grep > ',
           cwd = vim.fn.stdpath 'config',
           prompt_title = 'Live Grep Vimrc',
         }
@@ -596,11 +682,24 @@ require('lazy').setup({
       end, { desc = '[F]ind [O]rg' })
 
       vim.keymap.set('n', '<leader>lo', function()
-        builtin.live_grep {
+        builtin.grep_string {
+          search = vim.fn.input 'org grep > ',
           cwd = '~/org/',
           prompt_title = 'Live Grep Org',
         }
       end, { desc = '[L]ive grep [O]rg' })
+
+      vim.keymap.set('n', '<leader>fpc', function()
+        builtin.find_files { cwd = '$HOME/library/Application Support/plover/' }
+      end, { desc = '[F]ind [P]lover [c]onfig' })
+
+      vim.keymap.set('n', '<leader>lpc', function()
+        builtin.grep_string {
+          search = 'plover grep > ',
+          cwd = '$HOME/library/Application Support/plover/',
+          prompt_title = 'grep plover config',
+        }
+      end, { desc = '[l]ive grep [p]lover [c]onfig' })
     end,
   },
 
@@ -981,6 +1080,9 @@ require('lazy').setup({
 
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
+        --
+        ['<Up>'] = false,
+        ['<Down>'] = false,
       },
 
       appearance = {
@@ -1094,7 +1196,7 @@ require('lazy').setup({
         -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
         --  If you are experiencing weird indenting issues, add the language to
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-        additional_vim_regex_highlighting = { 'ruby' },
+        additional_vim_regex_highlighting = { 'ruby', 'lua' },
       },
       indent = { enable = true, disable = { 'ruby' } },
     },
@@ -1104,6 +1206,9 @@ require('lazy').setup({
     --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+  },
+  {
+    'nvim-treesitter/nvim-treesitter-context',
   },
   {
     'nvim-treesitter/nvim-treesitter-textobjects',
@@ -1197,16 +1302,35 @@ require('lazy').setup({
       local term = require 'harpoon.term'
       vim.keymap.set('n', '<leader>tj', function()
         term.gotoTerminal(1)
-      end, { desc = '[H]arpoon [j]' })
+      end, { desc = '[T]erminal [J]' })
       vim.keymap.set('n', '<leader>tk', function()
         term.gotoTerminal(2)
-      end, { desc = '[H]arpoon [j]' })
+      end, { desc = '[T]erminal [K]' })
       vim.keymap.set('n', '<leader>tl', function()
         term.gotoTerminal(3)
-      end, { desc = '[H]arpoon [j]' })
+      end, { desc = '[T]erminal [L]' })
       vim.keymap.set('n', '<leader>t;', function()
         term.gotoTerminal(4)
-      end, { desc = '[H]arpoon [j]' })
+      end, { desc = '[T]erminal [;]' })
+
+      local mark = require 'harpoon.mark'
+      vim.keymap.set('n', '<leader>hi', mark.add_file, { desc = '[H]arpoon [I]nclude' })
+
+      local ui = require 'harpoon.ui'
+      vim.keymap.set('n', '<leader>hq', ui.toggle_quick_menu, { desc = '[H]arpoon [Q]uick menu' })
+
+      vim.keymap.set('n', '<leader>hf', function()
+        ui.nav_file(1)
+      end, { desc = '[H]arpoon [F]' })
+      vim.keymap.set('n', '<leader>hd', function()
+        ui.nav_file(2)
+      end, { desc = '[H]arpoon [D]' })
+      vim.keymap.set('n', '<leader>hs', function()
+        ui.nav_file(3)
+      end, { desc = '[H]arpoon [S]' })
+      vim.keymap.set('n', '<leader>ha', function()
+        ui.nav_file(4)
+      end, { desc = '[H]arpoon [A]' })
     end,
   },
 }, {
