@@ -265,6 +265,15 @@ vim.api.nvim_create_autocmd('BufEnter', {
   end,
 })
 
+vim.api.nvim_create_autocmd('User', {
+  pattern = 'TelescopePreviewerLoaded',
+  callback = function(args)
+    -- Check if the buffer is not a help file or other specific types where wrapping might not be desired
+    -- if args.data.filetype ~= "help" then
+    vim.wo.wrap = false
+    -- end
+  end,
+})
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -316,7 +325,8 @@ require('lazy').setup({
                 auth_method = 'gemini-api-key', -- "oauth-personal"|"gemini-api-key"|"vertex-ai"
               },
               env = {
-                GEMINI_API_KEY = 'cmd:op read op://Personal/Gemini/credential --no-newline',
+                -- GEMINI_API_KEY = 'cmd:op read op://Personal/Gemini/credential --no-newline',
+                GEMINI_API_KEY = 'AIzaSyAhMEcxQNEe-2R4YQKcGDhXWksd3kTx4us',
               },
             })
           end,
@@ -325,8 +335,8 @@ require('lazy').setup({
       strategies = {
         chat = {
           adapter = 'gemini_cli',
-          -- model = 'gemini-2.5-flash',
-          model = 'gemini-2.5-pro',
+          model = 'gemini-2.5-flash',
+          -- model = 'gemini-2.5-pro',
           keymaps = {
             options = {
               modes = { n = 'g?' },
@@ -522,6 +532,7 @@ require('lazy').setup({
     'nvim-telescope/telescope.nvim',
     event = 'VimEnter',
     dependencies = {
+      'debugloop/telescope-undo.nvim',
       'nvim-lua/plenary.nvim',
       { -- If encountering errors, see telescope-fzf-native README for installation instructions
         'nvim-telescope/telescope-fzf-native.nvim',
@@ -613,6 +624,7 @@ require('lazy').setup({
             case_mode = 'smart_case', -- or "ignore_case" or "respect_case"
             -- the default case_mode is "smart_case"
           },
+          undo = {},
         },
       }
 
@@ -620,6 +632,8 @@ require('lazy').setup({
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
       -- pcall(require('telescope').load_extension, 'fzy_native')
+      require('telescope').load_extension 'undo'
+      vim.keymap.set('n', '<leader>ut', '<cmd>Telescope undo<cr>', { desc = 'Undo Tree' })
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
@@ -1009,7 +1023,7 @@ require('lazy').setup({
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true, mm = true, m = true }
+        local disable_filetypes = { c = true, cpp = true, mm = true, m = true, java = true }
         if disable_filetypes[vim.bo[bufnr].filetype] then
           return nil
         else
