@@ -171,6 +171,7 @@ vim.o.confirm = true
 
 -- [[ Basic Keymaps ]]
 -- plover related keymaps
+vim.keymap.set("n", '<leader>pr', function () require("user.plover").startPlover() end)
 vim.keymap.set('i', '<C-j>', '<C-\\><C-o>', { noremap = true, silent = true })
 vim.keymap.set({ 'n', 'v' }, '<C-j>', '<nop>', { noremap = true, silent = true })
 vim.keymap.set('t', '<C-j>', '<C-\\><C-n>', { noremap = true, silent = true })
@@ -703,7 +704,7 @@ require('lazy').setup({
       end, { desc = '[L]ive grep [O]rg' })
 
       vim.keymap.set('n', '<leader>fpc', function()
-        builtin.find_files { cwd = '$HOME/library/Application Support/plover/' }
+        builtin.find_files { cwd = (vim.loop.os_uname().sysname == "Darwin" and os.getenv("HOME").."/Library/Application Support/plover/" or os.getenv("HOME").."/.config/plover/") }
       end, { desc = '[F]ind [P]lover [c]onfig' })
 
       vim.keymap.set('n', '<leader>lpc', function()
