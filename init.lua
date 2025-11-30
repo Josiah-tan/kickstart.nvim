@@ -388,7 +388,14 @@ require('lazy').setup({
       {
         '<leader>gs',
         function()
-          require('neogit').open { cwd = vim.fn.expand '%:p:h', kind = 'split_above' }
+          local current_buftype = vim.api.nvim_buf_get_option(0, 'buftype')
+          local cwd_path
+          if current_buftype == 'terminal' then
+            cwd_path = vim.loop.cwd()
+          else
+            cwd_path = vim.fn.expand('%:p:h')
+          end
+          require('neogit').open { cwd = cwd_path, kind = 'split_above' }
         end,
         desc = 'Open Neogit',
       },
