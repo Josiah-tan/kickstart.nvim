@@ -87,6 +87,11 @@ P.S. You can delete this when you're done too. It's your config now! :)
 -- vim.g.shiftwidth = 2
 -- vim.g.tabstop = 2
 
+vim.o.tabstop = 2
+vim.o.shiftwidth = 2
+vim.o.expandtab = true -- Ensure tabs are converted to spaces
+vim.o.smartindent = true -- Enable smart indentation
+
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
@@ -595,6 +600,17 @@ require('lazy').setup({
           },
           mappings = {
             i = {
+              -- Create new file from prompt
+              ['<C-e>'] = function(prompt_bufnr)
+                local action_state = require 'telescope.actions.state'
+                local prompt = action_state.get_current_line()
+                if prompt == '' then
+                  return
+                end
+                require('telescope.actions').close(prompt_bufnr)
+                vim.cmd('edit ' .. vim.fn.fnameescape(prompt))
+                vim.fn.mkdir(vim.fn.fnamemodify(prompt, ':h'), 'p')
+              end,
               ['<C-o>'] = function(prompt_bufnr)
                 local actions = require 'telescope.actions'
                 local action_state = require 'telescope.actions.state'
@@ -689,6 +705,24 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>rc', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = 'vim[RC]' })
+
+      vim.keymap.set('n', '<leader>fhd', function()
+        builtin.find_files {
+          prompt_title = 'Home Dotfiles',
+          find_command = { 'find', vim.fn.expand '~', '-maxdepth', '1', '-name', '.??*', '-type', 'f' },
+          hidden = true,      -- Explicitly include hidden files
+          no_ignore = true,   -- Explicitly ignore .gitignore and similar
+        }
+      end, { desc = '[F]ind [H]ome [D]otfiles' })
+
+      vim.keymap.set('n', '<leader>fd', function()
+        builtin.find_files {
+          prompt_title = 'Project Dotfiles',
+          find_command = { 'find', '.', '-maxdepth', '1', '-name', '.*', '-type', 'f' },
+          hidden = true,
+          no_ignore = true,
+        }
+      end, { desc = '[F]ind [D]otfiles' })
 
       vim.keymap.set('n', '<leader>lc', function()
         builtin.grep_string {
