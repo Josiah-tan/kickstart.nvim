@@ -592,6 +592,7 @@ require('lazy').setup({
         --  All the info you're looking for is in `:help telescope.setup()`
         --
         defaults = {
+          path_display = { 'truncate' },
           file_sorter = require('telescope.sorters').get_fzy_sorter,
           layout_config = {
             width = 0.99,
