@@ -87,8 +87,8 @@ P.S. You can delete this when you're done too. It's your config now! :)
 -- vim.g.shiftwidth = 2
 -- vim.g.tabstop = 2
 
-vim.o.tabstop = 2
-vim.o.shiftwidth = 2
+vim.o.tabstop = 4
+vim.o.shiftwidth = 4
 vim.o.expandtab = true -- Ensure tabs are converted to spaces
 vim.o.smartindent = true -- Enable smart indentation
 
@@ -176,7 +176,9 @@ vim.o.confirm = true
 
 -- [[ Basic Keymaps ]]
 -- plover related keymaps
-vim.keymap.set("n", '<leader>pr', function () require("user.plover").startPlover() end)
+vim.keymap.set('n', '<leader>pr', function()
+  require('user.plover').startPlover()
+end)
 vim.keymap.set('i', '<C-j>', '<C-\\><C-o>', { noremap = true, silent = true })
 vim.keymap.set({ 'n', 'v' }, '<C-j>', '<nop>', { noremap = true, silent = true })
 vim.keymap.set('t', '<C-j>', '<C-\\><C-n>', { noremap = true, silent = true })
@@ -398,7 +400,7 @@ require('lazy').setup({
           if current_buftype == 'terminal' then
             cwd_path = vim.loop.cwd()
           else
-            cwd_path = vim.fn.expand('%:p:h')
+            cwd_path = vim.fn.expand '%:p:h'
           end
           require('neogit').open { cwd = cwd_path, kind = 'split_above' }
         end,
@@ -711,8 +713,8 @@ require('lazy').setup({
         builtin.find_files {
           prompt_title = 'Home Dotfiles',
           find_command = { 'find', vim.fn.expand '~', '-maxdepth', '1', '-name', '.??*', '-type', 'f' },
-          hidden = true,      -- Explicitly include hidden files
-          no_ignore = true,   -- Explicitly ignore .gitignore and similar
+          hidden = true, -- Explicitly include hidden files
+          no_ignore = true, -- Explicitly ignore .gitignore and similar
         }
       end, { desc = '[F]ind [H]ome [D]otfiles' })
 
@@ -746,7 +748,11 @@ require('lazy').setup({
       end, { desc = '[L]ive grep [O]rg' })
 
       vim.keymap.set('n', '<leader>fpc', function()
-        builtin.find_files { cwd = (vim.loop.os_uname().sysname == "Darwin" and os.getenv("HOME").."/Library/Application Support/plover/" or os.getenv("HOME").."/.config/plover/") }
+        builtin.find_files {
+          cwd = (
+            vim.loop.os_uname().sysname == 'Darwin' and os.getenv 'HOME' .. '/Library/Application Support/plover/' or os.getenv 'HOME' .. '/.config/plover/'
+          ),
+        }
       end, { desc = '[F]ind [P]lover [c]onfig' })
 
       vim.keymap.set('n', '<leader>lpc', function()
