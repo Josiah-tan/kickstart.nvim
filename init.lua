@@ -165,6 +165,7 @@ vim.o.inccommand = 'split'
 
 -- Show which line your cursor is on
 vim.o.cursorline = true
+vim.opt.guicursor = ""
 
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.o.scrolloff = 10
@@ -445,6 +446,7 @@ require('lazy').setup({
           map('n', '<leader>ghb', function()
             gitsigns.blame_line { full = true }
           end, { desc = '[G]it [H]unk [B]lame' })
+          map('n', '<leader>ghr', gitsigns.reset_hunk, { desc = '[G]it [H]unk [R]eset' })
         end,
       }
     end,
@@ -1353,6 +1355,9 @@ require('lazy').setup({
   -- Or use telescope!
   -- In normal mode type `<space>sh` then write `lazy.nvim-plugin`
   -- you can continue same window with `<space>sr` which resumes last telescope search
+  {
+    'Josiah-tan/Emily-symbols-help.vim'
+  },
   {
     'Josiah-tan/quick-projects-nvim',
     event = 'VimEnter',
