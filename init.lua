@@ -1051,6 +1051,7 @@ require('lazy').setup({
         },
       })
       vim.lsp.enable 'sourcekit'
+
     end,
   },
 
@@ -1238,8 +1239,24 @@ require('lazy').setup({
       -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
-      require('mini.surround').setup()
+      -- require('mini.surround').setup()
+      require('mini.surround').setup({
+        mappings = {
+          add = 'ys',
+          delete = 'ds',
+          find = '',
+          find_left = '',
+          highlight = '',
+          replace = 'cs',
 
+          -- Add this only if you don't want to use extended mappings
+          suffix_last = '',
+          suffix_next = '',
+        },
+        search_method = 'cover_or_next',
+      })
+
+      
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
       --  and try some other statusline plugin
@@ -1319,7 +1336,7 @@ require('lazy').setup({
           selection_modes = {
             ['@parameter.outer'] = 'v', -- charwise
             ['@function.outer'] = 'V', -- linewise
-            ['@class.outer'] = '<c-v>', -- blockwise
+            ['@class.outer'] = 'V', -- blockwise
           },
           -- If you set this to `true` (default is `false`) then any textobject is
           -- extended to include preceding or succeeding whitespace. Succeeding
@@ -1392,6 +1409,79 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>t;', function()
         term.gotoTerminal(4)
       end, { desc = '[T]erminal [;]' })
+
+      local function run_current_buffer(mode)
+        local current_filepath = vim.fn.bufname()
+        local file_extension_of_current_buffer = vim.fn.fnamemodify(current_filepath, ':e')
+        local filepath = current_filepath
+
+        -- 1. Logical search for the correct file (Your existing logic)
+        if not (file_extension_of_current_buffer == 'py' or file_extension_of_current_buffer == 'cpp') then
+          local all_buffers = vim.fn.getbufinfo({ buflisted = 1 })
+          table.sort(all_buffers, function(a, b) return a.lastused > b.lastused end)
+
+          local found_filepath = nil
+          for _, buf in ipairs(all_buffers) do
+            if buf.name and buf.name ~= '' and buf.name ~= current_filepath then
+              local file_extension_candidate = vim.fn.fnamemodify(buf.name, ':e')
+              if file_extension_candidate == 'py' or file_extension_candidate == 'cpp' then
+                found_filepath = buf.name
+                break
+              end
+            end
+          end
+
+          if found_filepath then
+            filepath = found_filepath
+          else
+            vim.notify('Could not find a recent Python or C++ buffer to run.', vim.log.levels.ERROR)
+            return
+          end
+        end
+
+        -- 2. SAVE THE FILE 
+        -- We find the buffer number for the filepath and save it if it's modified
+        local target_bufnr = vim.fn.bufnr(filepath)
+        if target_bufnr ~= -1 and vim.api.nvim_buf_get_option(target_bufnr, 'modified') then
+          -- 'silent!' prevents the "written" message from cluttering your UI
+          vim.api.nvim_buf_call(target_bufnr, function()
+            vim.cmd('silent! write')
+          end)
+        end
+
+        -- 3. Construct and send command (Your existing logic)
+        local filename = vim.fn.fnamemodify(filepath, ':t')
+        local file_extension = vim.fn.fnamemodify(filepath, ':e')
+        local command = ''
+
+        if file_extension == 'py' then
+          if mode == 'rp' then
+            command = 'python3 ' .. filename .. "\n"
+          elseif mode == 'ri' then
+            command = 'cat 1.in | python3 ' .. filename .. "\n"
+          end
+        elseif file_extension == 'cpp' then
+          if mode == 'rp' then
+            command = 'g++ -std=c++2a ' .. filename .. ' -pthread && ./a.out' .. "\n"
+          elseif mode == 'ri' then
+            command = 'g++ -std=c++2a ' .. filename .. ' && cat 1.in | ./a.out' .. "\n"
+          end
+        end
+
+        if command ~= '' then
+          term.sendCommand(1, command)
+        else
+          vim.notify('Unsupported file type or mode for running.', vim.log.levels.WARN)
+        end
+      end
+
+      vim.keymap.set('n', '<leader>rp', function()
+        run_current_buffer('rp')
+      end, { desc = 'Run [P]rogram in Terminal' })
+
+      vim.keymap.set('n', '<leader>ri', function()
+        run_current_buffer('ri')
+      end, { desc = 'Run [I]nput with Program in Terminal' })
 
       local mark = require 'harpoon.mark'
       vim.keymap.set('n', '<leader>hi', mark.add_file, { desc = '[H]arpoon [I]nclude' })
