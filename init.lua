@@ -1439,12 +1439,20 @@ require('lazy').setup({
           end
         end
 
-        -- 2. SAVE THE FILE 
+        -- 2. SAVE THE FILE(S)
         -- We find the buffer number for the filepath and save it if it's modified
         local target_bufnr = vim.fn.bufnr(filepath)
         if target_bufnr ~= -1 and vim.api.nvim_buf_get_option(target_bufnr, 'modified') then
-          -- 'silent!' prevents the "written" message from cluttering your UI
           vim.api.nvim_buf_call(target_bufnr, function()
+            vim.cmd('silent! write')
+          end)
+        end
+
+        -- Check if '1.in' is an open and modified buffer, and save it
+        local input_file_path = vim.fn.expand('%:p:h') .. '/1.in'
+        local input_bufnr = vim.fn.bufnr(input_file_path)
+        if input_bufnr ~= -1 and vim.api.nvim_buf_get_option(input_bufnr, 'modified') then
+          vim.api.nvim_buf_call(input_bufnr, function()
             vim.cmd('silent! write')
           end)
         end
